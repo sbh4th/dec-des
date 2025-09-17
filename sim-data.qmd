@@ -1,0 +1,10 @@
+---
+title: "Simulated Data"
+format: html
+editor: visual
+---
+
+Our goal is to estimate the effect of gender the the likelihood of receiving a callback for job ads. 
+
+## Data set up
+The basic data frame for the analysis will have job ads as the unit of analysis. Jobs are the 'subjects' of our inquiry, and we want to randomly assign these subjects CVs of different characteristics. For each add we will send 4 CVs. We will use a 2x2 factorial design, which ensures that each 'subject' (i.e., job posting) will be assigned all possible combinations of treatments (unmarried, female name, unmarried male name, married female name, married male name). In addition to marital status and the gender of the name, each CV will also be populated with other data: age, an indicator of quality (e.g., prestige of the educational training), job experience, work history. 
