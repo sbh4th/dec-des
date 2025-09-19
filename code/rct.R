@@ -1,6 +1,6 @@
-library(DeclareDesign)
 library(tidyverse)
 library(here)
+library(DeclareDesign)
 library(marginaleffects)
 library(tinytable)
 library(modelsummary)
@@ -12,7 +12,8 @@ declaration_18.1 <-
   declare_inquiry(ATE = mean(Y_Z_1 - Y_Z_0)) +
   declare_assignment(Z = complete_ra(N, prob = 0.5)) +
   declare_measurement(Y = reveal_outcomes(Y ~ Z)) +
-  declare_estimator(Y ~ Z, inquiry = "ATE")
+  declare_estimator(Y ~ Z, inquiry = "ATE") +
+  declare_estimator(Z ~ U, label = "Balance")
 
 dd_data <- run_design(declaration_18.1)
 
@@ -101,7 +102,8 @@ sim_d <- data.frame(age = age,
     cb = rbinom(n(), 1, prob = p),
     y = rbinom(n(), 1, prob = p_lpm))
 
-datasummary_skim(sim_d)
+
+modelsummary::datasummary_skim(sim_d)
 
 mod <- glm(
   cb ~ quality + married + woman,
@@ -148,4 +150,14 @@ dat <- data.frame(y, quality, married, woman)
 ols <- lm(y ~ quality + married + woman, data = dat)
 lmr <- lm_robust(y ~ quality + married + woman, data = dat)
 modelsummary(list("OLS" = ols, "Robust" = lmr))
+
+
+M <- 
+  declare_model(
+    N = 100, 
+    potential_outcomes(Y ~ rbinom(N, size = 1, prob = 0.1 * Z + 0.5)),
+    Z = ifelse()
+  )
+
+M()
 

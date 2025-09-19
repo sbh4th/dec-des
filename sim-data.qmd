@@ -1,7 +1,6 @@
 ---
 title: "Simulated Data"
 format: html
-editor: visual
 ---
 
 Our goal is to estimate the effect of gender the the likelihood of receiving a callback for job ads. 
