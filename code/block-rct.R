@@ -126,3 +126,25 @@ table(blocks, clusters)
 
 declare_ra(clusters = clusters, blocks = blocks)
 declare_ra(clusters = clusters, blocks = blocks, prob_each = c(.2, .5, .3))
+
+
+library(randomizr)
+# number of jobs
+N <- 1000
+age <- round(runif(min = 22, max = 28, n = N),0)
+quality <- rbinom(N, 1, prob = 0.5)
+married <- rbinom(N, 1, prob = 0.5)
+woman <- rbinom(N, 1, prob = 0.5)
+
+# create dataset
+sim_d <- data.frame(job_id = 1:N,
+  age = age, quality = quality,
+  married = married, woman = woman)
+
+d <- data.frame(job_id = 1:N)
+
+
+bernoulli_logit <- fabricate(
+  N = N, x = 10 * rnorm(N),
+  binary = draw_binary(latent = x, link = "probit")
+)

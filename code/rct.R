@@ -3,7 +3,6 @@ library(here)
 library(DeclareDesign)
 library(marginaleffects)
 library(tinytable)
-library(modelsummary)
 
 declaration_18.1 <-
   declare_model(N = 100,
@@ -12,8 +11,7 @@ declaration_18.1 <-
   declare_inquiry(ATE = mean(Y_Z_1 - Y_Z_0)) +
   declare_assignment(Z = complete_ra(N, prob = 0.5)) +
   declare_measurement(Y = reveal_outcomes(Y ~ Z)) +
-  declare_estimator(Y ~ Z, inquiry = "ATE") +
-  declare_estimator(Z ~ U, label = "Balance")
+  declare_estimator(Y ~ Z, inquiry = "ATE")
 
 dd_data <- run_design(declaration_18.1)
 
