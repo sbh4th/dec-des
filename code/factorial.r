@@ -43,4 +43,4 @@ declaration_18.7 <-
                     inquiry = c("diff_in_CATEs_Z1", "diff_in_CATEs_Z2"), 
                     label = "6") 
 
-diagnosis_18.7 <- diagnose_design(declaration_18.7, sims = 100)
+diagnosis_18.7 <- diagnose_design(declaration_18.7, sims = 30)

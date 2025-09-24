@@ -16,7 +16,7 @@ population <- declare_model(
                   # Ad-level characteristics
                   sector = sample(c("Finance", "Tech", "Healthcare", "Retail"), N, replace = TRUE),
                   firm_size = sample(c("Small", "Medium", "Large"), N, replace = TRUE, 
-                                     prob = c(0.4, 0.4, 0.2)),
+                                   prob = c(0.4, 0.4, 0.2)),
                   # Baseline callback rate varies by ad
                   baseline_callback = rnorm(N, mean = 0.15, sd = 0.05),
                   baseline_callback = pmax(0.05, pmin(0.4, baseline_callback)),
@@ -39,35 +39,35 @@ inquiry_blocked <- declare_inquiry(
 
 # Data strategy for blocked design - complete factorial within each ad
 data_strategy_blocked <- declare_assignment(
-  blocks = ads,
-  assignment_variable = "treatment_combo",
-  conditions = c("unmarried_female", "unmarried_male", "married_female", "married_male"),
-  block_m_each = c(1, 1, 1, 1)  # Exactly one of each type per ad
+  treatment_combo = conduct_ra(N = N, 
+                              blocks = ads, 
+                              conditions = c("unmarried_female", "unmarried_male", "married_female", "married_male"), 
+                              block_m_each = c(1, 1, 1, 1))  # Exactly one of each type per ad
 ) + 
-  declare_step(
-    handler = function(data) {
-      data %>%
-        mutate(
-          female = case_when(
-            treatment_combo %in% c("unmarried_female", "married_female") ~ 1,
-            TRUE ~ 0
-          ),
-          married = case_when(
-            treatment_combo %in% c("married_female", "married_male") ~ 1,
-            TRUE ~ 0
-          )
+declare_step(
+  handler = function(data) {
+    data %>%
+      mutate(
+        female = case_when(
+          treatment_combo %in% c("unmarried_female", "married_female") ~ 1,
+          TRUE ~ 0
+        ),
+        married = case_when(
+          treatment_combo %in% c("married_female", "married_male") ~ 1,
+          TRUE ~ 0
         )
-    },
-    label = "create_indicators"
-  )
+      )
+  },
+  label = "create_indicators"
+)
 
 # Potential outcomes for blocked design
 potential_outcomes_blocked <- declare_potential_outcomes(
   Y ~ baseline_callback + 
-    gender_effect * female + 
-    marriage_effect * married + 
-    interaction_effect * female * married +
-    rnorm(n(), 0, 0.02),  # Individual noise
+      gender_effect * female + 
+      marriage_effect * married + 
+      interaction_effect * female * married +
+      rnorm(n(), 0, 0.02),  # Individual noise
   conditions = list(
     female = c(0, 1),
     married = c(0, 1)
@@ -104,7 +104,7 @@ population_unmatched <- declare_model(
   ads = add_level(N = N_ads,
                   sector = sample(c("Finance", "Tech", "Healthcare", "Retail"), N, replace = TRUE),
                   firm_size = sample(c("Small", "Medium", "Large"), N, replace = TRUE, 
-                                     prob = c(0.4, 0.4, 0.2)),
+                                   prob = c(0.4, 0.4, 0.2)),
                   baseline_callback = rnorm(N, mean = 0.15, sd = 0.05),
                   baseline_callback = pmax(0.05, pmin(0.4, baseline_callback)),
                   gender_effect = rnorm(N, mean = -0.03, sd = 0.02),
@@ -123,30 +123,29 @@ inquiry_unmatched <- declare_inquiry(
 
 # Random assignment of gender, marital status as covariate
 data_strategy_unmatched <- declare_assignment(
-  Z = "female",
-  prob = 0.5
+  female = conduct_ra(N = N, prob = 0.5)
 ) + 
-  declare_step(
-    handler = function(data) {
-      data %>%
-        mutate(married = rbinom(n(), 1, 0.5))  # Random marital status
-    },
-    label = "assign_marriage"
-  )
+declare_step(
+  handler = function(data) {
+    data %>%
+      mutate(married = rbinom(n(), 1, 0.5))  # Random marital status
+  },
+  label = "assign_marriage"
+)
 
 # Potential outcomes for unmatched design
 potential_outcomes_unmatched <- declare_potential_outcomes(
   Y_Z_0 = baseline_callback[ads] + 
-    marriage_effect[ads] * married + 
-    cv_noise + rnorm(n(), 0, 0.02),
+          marriage_effect[ads] * married + 
+          cv_noise + rnorm(n(), 0, 0.02),
   Y_Z_1 = baseline_callback[ads] + 
-    gender_effect[ads] + 
-    marriage_effect[ads] * married + 
-    interaction_effect[ads] * married +
-    cv_noise + rnorm(n(), 0, 0.02)
+          gender_effect[ads] + 
+          marriage_effect[ads] * married + 
+          interaction_effect[ads] * married +
+          cv_noise + rnorm(n(), 0, 0.02)
 )
 
-reveal_unmatched <- declare_reveal(Y, Z = female)
+reveal_unmatched <- declare_reveal(Y, female)
 
 # Estimator for unmatched design - includes marital status as covariate
 estimator_unmatched <- declare_estimator(
@@ -160,11 +159,11 @@ estimator_unmatched <- declare_estimator(
 
 # Complete unmatched design
 unmatched_design <- population_unmatched + inquiry_unmatched + data_strategy_unmatched + 
-  potential_outcomes_unmatched + reveal_unmatched + estimator_unmatched
+                   potential_outcomes_unmatched + reveal_unmatched + estimator_unmatched
 
 # DESIGN DIAGNOSIS - Compare efficiency
 print("Diagnosing Blocked Design...")
-diagnosis_blocked <- diagnose_design(blocked_design, sims = 500)
+diagnosis_blocked <- diagnose_design(blocked_design, sims = 30)
 
 print("Diagnosing Unmatched Design...")
 diagnosis_unmatched <- diagnose_design(unmatched_design, sims = 500)
